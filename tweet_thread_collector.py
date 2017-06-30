@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import twitter
 import configparser
+from datetime import datetime,timedelta
 
 class tweet_auth(object):
     def __init__(self):
@@ -27,7 +28,7 @@ class tweet_auth(object):
     def _get_config(self):
         if not self._config:
             self._config = configparser.ConfigParser()
-            self._config.read('.auth_tweet')
+            self._config.read(u'.auth_tweet')
         return self._config
 
 def authenticate():
@@ -35,15 +36,24 @@ def authenticate():
     api = twitter.Api(consumer_key=auth.get_consumer_key(),consumer_secret=auth.get_consumer_secret(),access_token_key=auth.get_access_key(),access_token_secret=auth.get_access_secret())
     return api
 
-def get_public_status(user_id, api):
-    statuses = api.GetUserTimeline(user_id)
-    print([s.text for s in statuses])
-    replies = api.GetReplies()
-    print replies
+def get_root_thread_info(api, date, user_handle):
+    results = api.GetSearch(raw_query="q=Today%27s%20thread%20from%3A"+user_handle+"%20since%3A"+date)
+    list_ids = []
+    for s in results:
+        list_ids.append(s.id)
+    return list_ids
+
+#def extract_replies(api, date, list_ids)
+
+def generate_date():
+    yesterday = datetime.now() - timedelta(days=1)
+    return yesterday.strftime("%Y-%m-%d")
 
 def main():
     api = authenticate()
-    get_public_status('2943003606', api)
+    date = generate_date()
+    list_ids = get_root_thread_info(api, date, 'OnlyNakedTruth')
+    print list_ids
 
 if __name__ == '__main__':
     main()
